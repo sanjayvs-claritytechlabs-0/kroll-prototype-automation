@@ -1,0 +1,267 @@
+---
+alwaysApply: true
+---
+No. In fact, trying to recreate **all of Kroll** would be a mistake.
+
+You're building a **proof of concept**, not a pharmacy management system.
+
+---
+
+## Think about the actual workflow
+
+Your proposed product is:
+
+```text
+Email/Fax arrives
+      ↓
+Open attachment
+      ↓
+OCR / Extract data
+      ↓
+Validate data
+      ↓
+Enter into Kroll
+      ↓
+Save
+```
+
+So ask yourself:
+
+**Which screens of Kroll are actually touched during this process?**
+
+Probably only:
+
+1. Patient Search
+2. Patient Create/Edit
+3. Insurance
+4. Allergies (maybe)
+5. Medical Conditions (maybe)
+6. Save
+
+That's it.
+
+You do NOT need:
+
+* Inventory
+* Billing
+* POS
+* Dispensing
+* Drug interaction checks
+* Reports
+* Staff management
+* Scheduling
+* Accounting
+* Administration modules
+
+Even if Kroll has hundreds of screens.
+
+---
+
+## For your prototype, I'd build only 4 things
+
+### Screen 1: Inbox
+
+Simulate:
+
+```text
+Email Inbox
+
+Fax Inbox
+
+Incoming Documents
+```
+
+Allow:
+
+* Upload PDF
+* Upload image
+* Upload fax image
+
+---
+
+### Screen 2: Document Viewer
+
+Simulate:
+
+```text
+Incoming Fax
+
+Patient Registration Form.pdf
+```
+
+User can:
+
+* Open
+* View
+* OCR
+
+---
+
+### Screen 3: Patient Search
+
+Simulate:
+
+```text
+Search Patient
+
+First Name
+Last Name
+DOB
+
+[Search]
+```
+
+Because every pharmacy first checks:
+
+```text
+Existing Patient?
+```
+
+before creating.
+
+---
+
+### Screen 4: Patient Record
+
+Tabs:
+
+```text
+General
+Insurance
+Allergies
+Communications
+```
+
+This is where automation enters data.
+
+---
+
+## This is enough
+
+Your demo flow becomes:
+
+```text
+Fax arrives
+      ↓
+Open fax
+      ↓
+Extract patient
+      ↓
+Search patient
+      ↓
+Not found
+      ↓
+Create patient
+      ↓
+Add insurance
+      ↓
+Save
+```
+
+This already proves:
+
+* OCR works
+* Extraction works
+* Automation works
+* Validation works
+
+---
+
+## What you do NOT need yet
+
+Don't build:
+
+```text
+Prescription Entry
+Dispensing
+Inventory
+Drug Database
+Refill Management
+Pricing
+POS
+Claims Processing
+Reporting
+```
+
+Those are unrelated to your automation proof.
+
+---
+
+## Do you need to know all of Kroll?
+
+Absolutely not.
+
+You only need to understand:
+
+### Workflow A
+
+```text
+Incoming Document
+      ↓
+Patient Search
+      ↓
+Create / Update Patient
+      ↓
+Save
+```
+
+### Workflow B
+
+```text
+Incoming Document
+      ↓
+Find Existing Patient
+      ↓
+Update Insurance
+      ↓
+Save
+```
+
+### Workflow C
+
+```text
+Incoming Document
+      ↓
+Find Existing Patient
+      ↓
+Update Allergy
+      ↓
+Save
+```
+
+If your prototype handles those three workflows, you've already validated most of the business idea.
+
+---
+
+## What I'd tell Cursor now
+
+Reduce scope drastically:
+
+```text
+Build a Kroll-inspired simulator with:
+
+1. Inbox
+2. Document Viewer
+3. Patient Search
+4. Patient Record
+
+Patient Record tabs:
+- General
+- Insurance
+- Allergies
+- Communications
+
+Support:
+- Create Patient
+- Search Patient
+- Update Patient
+- Save Patient
+
+Use SQLite.
+
+Include dynamic layout mode.
+
+Do NOT build prescriptions, inventory, billing, dispensing, reports, or other pharmacy modules.
+```
+
+That is probably **10–20% of Kroll**, but it's likely **80–90% of what you need** to validate your automation concept. The goal is proving the workflow, not cloning a commercial pharmacy system.

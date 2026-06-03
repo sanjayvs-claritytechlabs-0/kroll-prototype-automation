@@ -1,0 +1,326 @@
+---
+alwaysApply: true
+---
+
+# Technical Implementation — Kroll Pharmacy Automation PoC
+
+This document explains **what technologies we use**, **what each one does**, and **how this repo implements them** so you can learn the stack end-to-end.
+
+---
+
+## 1. High-level architecture
+
+Two **separate Python desktop processes** (not one monolithic app):
+
+| Application | Path | Role |
+|-------------|------|------|
+| **Pharmacy Simulator** | `apps/pharmacy_simulator/` | Fake Kroll-style UI for pharmacists to click through manually |
+| **Automation Controller** | `apps/automation_controller/` | External robot that drives the simulator via Windows UI Automation |
+
+They communicate only through the **Windows desktop** (windows, controls, keyboard)—not HTTP or shared memory.
+
+```text
+┌─────────────────────────────┐     UIA / pywinauto      ┌──────────────────────────────┐
+│  Pharmacy Simulator       │ ◄─────────────────────── │  Automation Controller       │
+│  (PyQt6 GUI)              │   read/set by objectName │  (CLI: fill_save, enumerate) │
+└─────────────┬─────────────┘                          └──────────────────────────────┘
+              │
+              ▼
+       SQLite (database/pharmacy.db)
+       JSON configs (config/)
+       JSONL logs (logs/)
+       Screenshots (screenshots/)
+```
+
+**Target workflow (PoC):**
+
+```text
+Inbox → OCR/Extract → Patient Search → Patient Record → Save
+```
+
+---
+
+## 2. Core language & runtime
+
+### Python 3
+
+- **What it is:** General-purpose language used for both the GUI app and automation scripts.
+- **Why here:** Fast iteration, strong Windows desktop libraries, single `requirements.txt`.
+- **How we use it:**
+  - `apps/pharmacy_simulator/main.py` — starts the Qt event loop.
+  - `apps/automation_controller/main.py` — CLI with `argparse` (`--connect-only`, `--enumerate`, `--workflow fill_save`).
+  - Type hints (`str | None`, `Protocol`) for clearer interfaces.
+
+### Standard library (no extra install)
+
+| Module | Used for |
+|--------|----------|
+| `sqlite3` | Local database via repositories (`patient_repository.py`, `inbox_repository.py`) |
+| `json` | Sample patients, inbox config, automation test patient, JSONL logs |
+| `pathlib` | Project paths (`db_path.py`, `paths.py`) |
+| `argparse` | Automation controller CLI |
+| `re` | Regex extraction from fax/email text; date/combo helpers in UIA client |
+| `dataclasses` | `ControlInfo`, extraction models |
+| `typing.Protocol` | `IOCRProvider`, `IExtractionProvider`, `IKrollAdapter` — plug-in contracts |
+| `uuid` | Generate patient IDs (`P-XXXXXXXX`) |
+| `datetime` | Timestamps on save; validation (DOB not in future) |
+| `ctypes` | `SetForegroundWindow` so automation clicks reach the simulator when the terminal has focus |
+
+---
+
+## 3. Installed dependencies (`requirements.txt`)
+
+### PyQt6 (`PyQt6>=6.6.0`)
+
+- **What it is:** Python bindings for **Qt 6**, a cross-platform C++ UI framework.
+- **What it’s for:** Building the **desktop simulator** that looks like legacy Windows healthcare software (tabs, grids, modal dialogs, menus).
+- **Key Qt concepts we use:**
+  - `QApplication` — app lifecycle (`main.py`).
+  - `QMainWindow`, `QWidget` — main shell and patient record windows.
+  - `QTabWidget` — Patient Record tabs (General, Insurance, Family, …).
+  - `QTableWidget` — Family, Allergies, Communications grids.
+  - `QFormLayout`, `QGroupBox` — General tab sections.
+  - `QLineEdit`, `QComboBox`, `QCheckBox`, `QDateEdit`, `QPlainTextEdit` — form fields.
+  - `QShortcut` / `QKeySequence` — Ctrl+N, F3, F4, Ctrl+letter tab shortcuts.
+  - `QMessageBox` — save/validation dialogs (wrapped in `widgets/message_boxes.py`).
+  - `QScrollArea` — scrollable General tab.
+- **Where:** `apps/pharmacy_simulator/windows/`, `tabs/`, `dialogs/`, `styles.py`.
+- **Accessibility hook:** Every control calls `set_accessible()` → sets `objectName` + `accessibleName` for automation (`widgets/accessibility.py`).
+
+### pywinauto (`pywinauto>=0.6.8`)
+
+- **What it is:** Library to automate **Windows GUI** apps by finding controls and sending clicks/keys.
+- **What it’s for:** **Automation Controller** — attach to simulator windows, fill fields, click Save, without embedding code inside the simulator.
+- **Backend we use:** `backend="uia"` — **Microsoft UI Automation** (UIA), the modern accessibility API on Windows 10+.
+- **Key APIs we use:**
+  - `Desktop(backend="uia")` — entry point to all top-level windows.
+  - `window(title=...)`, `window(auto_id=...)` — find main / patient record (Qt often exposes `win_main`, `win_patient_record` as names, not human titles).
+  - `descendants()` — scan for `txt_first_name`, `btn_save`, etc. (Qt uses long dotted AutomationIds; we match by **Name** / suffix).
+  - `click_input()`, `type_keys()`, `set_edit_text()` — interact with controls.
+  - `capture_as_image()` — screenshots (needs Pillow).
+- **Where:** `apps/automation_controller/uia_client.py`, `simulator_adapter.py`, `workflows/fill_general_and_save.py`.
+- **Important lesson:** UIA behavior differs per control type (Edit vs ComboBox vs Spinner). The PoC fixes those **once** in `uia_client.py`; real Kroll will need similar per-control tuning.
+
+### Pillow (`Pillow>=10.0.0`)
+
+- **What it is:** Python Imaging Library fork — image read/write.
+- **What it’s for:** Saving **screenshots** when pywinauto calls `capture_as_image().save(...)`.
+- **Where:** `screenshots/` (before save, on errors). Optional: workflow continues if capture fails.
+
+---
+
+## 4. PRD / planned stack (not fully implemented yet)
+
+Listed in `.cursor/rules/prd.mdc` for the **full** product; current PoC uses subsets.
+
+| Technology | Purpose (PRD) | Status in this repo |
+|------------|-----------------|---------------------|
+| **FastAPI** | HTTP API / workflow backend | Not implemented — `backend/` folder planned |
+| **keyboard** | Global hotkeys (e.g. start automation) | Not in `requirements.txt` yet |
+| **pyautogui** | Screen-coordinate fallback automation | Not used — we avoid coordinates by policy |
+| **Tesseract / PaddleOCR** | Real OCR on PDF/images | Stubs in `extraction/providers/ocr_providers.py` |
+| **OpenAI / Gemini** | LLM field extraction | Stubs in `extraction/providers/stubs.py` |
+| **Vision models** | Layout-proof automation fallback | Future |
+
+---
+
+## 5. Data & configuration
+
+### SQLite (stdlib `sqlite3`)
+
+- **What it is:** File-based relational database (single file `database/pharmacy.db`).
+- **What it’s for:** Persist patients, family, insurance, allergies, communications, inbox metadata.
+- **How we implement:**
+  - `database/schema.py` — `CREATE TABLE` DDL.
+  - `PatientRepository` / `InboxRepository` — SQL CRUD, no ORM.
+  - Inbox files copied under `database/inbox/`.
+
+### JSON config files (`config/`)
+
+- **What it’s for:** Test data and catalogs without recompiling the app.
+- **Files:**
+  - `sample_patients.json` — John Doe etc. for Test menu.
+  - `sample_inbox.json` — seed inbox rows.
+  - `allergy_catalog.json` — allergy search list.
+  - `automation_test_patient.json` — fields keyed by `objectName` for `fill_save` workflow.
+  - `sample_documents/` — sample fax/email `.txt` for OCR pipeline demos.
+
+### JSON Lines logs (`logs/`)
+
+- **What it is:** One JSON object per line (append-only), easy to parse and audit.
+- **Files:**
+  - `extractions.jsonl` — OCR/extraction runs (`extraction/logging.py`).
+  - `automation.jsonl` — connect, field verify, workflow pass/fail (`automation_controller/logging_util.py`).
+
+---
+
+## 6. Pharmacy simulator — implementation patterns
+
+### 6.1 UI layer (PyQt6)
+
+| Area | Location | Pattern |
+|------|----------|---------|
+| Main shell | `windows/main_window.py` | Menu, toolbar, opens Inbox / Search / Patient Record |
+| Patient Record | `windows/patient_record.py` | Tabs + Save/Update + Randomize Layout |
+| Inbox / Viewer / Search | `windows/inbox_window.py`, `document_viewer.py`, `patient_search.py` | Modal-style `QWidget` windows |
+| Tabs | `tabs/general_tab.py`, `insurance_tab.py`, … | Form layouts + `objectName` on every widget |
+| Dialogs | `dialogs/*.py` | Allergy search, family member, extraction review |
+| Styling | `styles.py` | `QApplication` stylesheet — healthcare desktop look |
+
+### 6.2 Accessibility contract (automation-facing)
+
+- **Rule:** Every interactive control has stable `objectName` (e.g. `txt_first_name`, `btn_save`).
+- **Helper:** `set_accessible(widget, "txt_phone")` sets `objectName` and `accessibleName`.
+- **Why:** Automation never uses screen coordinates; it finds controls by name/AutomationId via UIA.
+- **Dynamic layout:** `layout/dynamic_layout.py` shuffles visual order but **does not rename** controls (Module 9).
+
+### 6.3 Validation
+
+- `validation/patient_validator.py` — business rules (required last name, DOB format, phone, postal code, health card).
+- Called before Save; focuses first invalid field by `objectName`.
+
+### 6.4 Extraction pipeline (Strategy / Protocol pattern)
+
+```text
+Inbox document file
+    → IOCRProvider.extract_text()  → OCRResult (raw text)
+    → IExtractionProvider.extract_fields()  → dict (first_name, last_name, …)
+    → ExtractionResult dialog → Patient Search prefill
+```
+
+| Piece | Implementation |
+|-------|----------------|
+| Interfaces | `extraction/interfaces.py` — `IOCRProvider`, `IExtractionProvider` |
+| Working providers | `TextFileOCRProvider`, `RegexExtractionProvider` |
+| Stubs | PDF/image OCR, OpenAI/Gemini — raise or return placeholders |
+| Orchestrator | `DocumentProcessor` in `document_processor.py` |
+| Models | `extraction/models.py` — `OCRResult`, `ExtractionResult` |
+
+**Design intent:** Swap providers without changing UI code (same pattern planned for real OCR/LLM APIs).
+
+### 6.5 Adapter stubs (future Kroll)
+
+- `adapters/__init__.py` — `IKrollAdapter` Protocol (connect, save, search, set_field_value, …).
+- `adapters/kroll_stubs.py` — `KrollUIAutomationAdapter` not implemented; points to `automation_controller` for real UIA today.
+
+---
+
+## 7. Automation controller — implementation patterns
+
+### 7.1 Layering
+
+| Layer | File | Responsibility |
+|-------|------|----------------|
+| CLI | `main.py` | Parse args, run workflows, print last log error |
+| Adapter | `simulator_adapter.py` | `connect()`, `open_new_patient_record()`, `set_field_value()`, `save_patient()` |
+| UIA client | `uia_client.py` | Low-level Windows: find windows, find controls, get/set by type |
+| Workflow | `workflows/fill_general_and_save.py` | Script: fill 17 fields, verify read-back, save |
+
+### 7.2 How we find the simulator
+
+1. Connect to main window (`win_main` or title **Kroll by Telus Health**).
+2. Open patient: focus main → click `btn_new_patient` or menu **Alt+F,N** or **Ctrl+N**.
+3. Wait for Patient Record: window named `win_patient_record` **or** any top-level window containing `btn_save`.
+
+### 7.3 How we find fields inside Patient Record
+
+1. Prefer **descendant scan** — match `Name == objectName` or AutomationId ending in `.txt_first_name`.
+2. Fallback `child_window()` only when the wrapper supports it.
+3. **Per control type** in `set_value` / `get_value`:
+   - **Edit** (`QLineEdit`) — `set_edit_text` or Ctrl+A + type (DOB uses plain text field for reliable automation).
+   - **ComboBox** — `select()`, dropdown item click, or type-ahead + Enter.
+   - **CheckBox** — toggle if state wrong.
+   - **Date spinner** (deceased only) — segmented keyboard `{HOME}` + year/month/day + `{RIGHT}`.
+
+### 7.4 Verification loop
+
+After each `set_field_value`, workflow calls `get_field_value` and compares to expected (from `config/automation_test_patient.json`). Mismatch → log to `automation.jsonl`, screenshot, stop.
+
+---
+
+## 8. Project layout (technical map)
+
+```text
+kroll_pharmacy_project/
+├── apps/
+│   ├── pharmacy_simulator/     # PyQt6 GUI
+│   │   ├── main.py
+│   │   ├── windows/            # Top-level screens
+│   │   ├── tabs/               # Patient Record tabs
+│   │   ├── dialogs/
+│   │   ├── database/           # SQLite schema + repositories
+│   │   ├── extraction/         # OCR + regex pipeline
+│   │   ├── validation/
+│   │   ├── layout/             # Dynamic layout shuffle
+│   │   ├── adapters/           # IKrollAdapter (future)
+│   │   └── widgets/            # accessibility, message_boxes
+│   └── automation_controller/  # pywinauto CLI
+│       ├── uia_client.py
+│       ├── simulator_adapter.py
+│       └── workflows/
+├── config/                     # JSON test data
+├── database/                   # pharmacy.db + inbox files
+├── logs/                       # *.jsonl
+├── screenshots/
+└── requirements.txt            # PyQt6, pywinauto, Pillow
+```
+
+---
+
+## 9. How to run (technical)
+
+```powershell
+pip install -r requirements.txt
+
+# Process 1 — Qt event loop
+python apps/pharmacy_simulator/main.py
+
+# Process 2 — UIA automation (simulator must be running)
+python apps/automation_controller/main.py --connect-only
+python apps/automation_controller/main.py --enumerate
+python apps/automation_controller/main.py --workflow fill_save
+```
+
+---
+
+## 10. Will this approach work on real Kroll?
+
+**What the PoC proves**
+
+- Workflow design (inbox → extract → search → record → save) is automatable in principle.
+- **Stable control identity** (`objectName` / UIA Name) matters more than pixel position.
+- A **separate automation process** (sidecar) can drive a closed commercial app without source code.
+
+**What breaks in the simulator teaches you what to fix on Kroll**
+
+- ComboBox / date / focus issues are **control-level**, not “automation is impossible.”
+- Each issue becomes a **handler** in `uia_client.py` (or a Kroll-specific adapter), not a rewrite.
+
+**On real Kroll (when you get access)**
+
+| If Kroll exposes… | Approach |
+|-------------------|----------|
+| Good UIA / AutomationId metadata | Same as today: `SimulatorUIAAdapter` → `KrollUIAutomationAdapter` |
+| Poor metadata | OCR + coordinates + vision (PRD fallbacks), or partner APIs if Telus provides them |
+| No free trial | This simulator is the **practice environment**; JSON workflows + logs define “done” before production |
+
+**Bottom line:** Small failures here are **expected tuning**, not proof that Kroll automation fails. They are the checklist you’ll replay once on real Kroll windows—often with the same pywinauto + UIA stack on Windows.
+
+---
+
+## 11. Module → technology cheat sheet
+
+| Module | Primary tech |
+|--------|----------------|
+| 1–2 Patient Record + SQLite | PyQt6, sqlite3, JSON samples |
+| 3 Patient Search | PyQt6, SQL `LIKE` search |
+| 4–6 Insurance / Allergies / Communications | PyQt6 grids + SQLite |
+| 7 Inbox + Viewer | PyQt6, file copy to `database/inbox/` |
+| 8 OCR/Extract | Protocol providers, regex, JSONL logging |
+| 9 Dynamic layout | PyQt6 layouts + `dynamic_layout.py` |
+| 10 Automation | pywinauto UIA, Pillow, JSONL, argparse CLI |
+| 11 (next) Workflow engine | Planned: orchestration + audit (PRD: FastAPI backend optional) |
+
+---
+
+*Last updated: 2026-06-03 — aligned with Modules 1–10 implementation.*

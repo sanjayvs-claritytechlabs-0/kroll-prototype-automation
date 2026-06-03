@@ -1,0 +1,712 @@
+# KROLL_AUTOMATION_SPEC.md
+
+# Overview
+
+Build a local Kroll-inspired Pharmacy Management Simulator and Desktop Automation Framework.
+
+This project is intended to validate whether pharmacy workflows can be automated through:
+
+* Desktop UI Automation
+* Keyboard Navigation
+* Validation Rules
+* Dynamic Layout Mapping
+
+The simulator should mimic common Kroll workflows extracted from the user manual.
+
+The purpose is NOT to clone Kroll.
+
+The purpose is to validate automation architecture before integrating with a real pharmacy management system.
+
+---
+
+# Goals
+
+Validate that:
+
+1. Patient data can be entered automatically.
+2. UI layout changes do not break automation.
+3. Keyboard-driven workflows can be automated.
+4. Validation prevents incorrect data entry.
+5. Screens can be discovered dynamically.
+6. Future support for Kroll can be added through adapters.
+
+---
+
+# Architecture
+
+Patient Form
+
+↓
+
+OCR (future)
+
+↓
+
+Data Extraction (future)
+
+↓
+
+Patient Schema
+
+↓
+
+Workflow Engine
+
+↓
+
+Automation Adapter
+
+↓
+
+Pharmacy Simulator
+
+↓
+
+Validation Engine
+
+↓
+
+Audit Log
+
+---
+
+# Technology Stack
+
+Desktop Application:
+
+* PyQt6
+
+Automation:
+
+* pywinauto
+* keyboard
+* pyautogui
+
+Backend:
+
+* FastAPI
+
+Database:
+
+* SQLite
+
+Logging:
+
+* Structured JSON logs
+
+Future:
+
+* OCR
+* Vision Models
+* Kroll Adapter
+
+---
+
+# Application Structure
+
+/apps
+
+```
+pharmacy_simulator/
+
+automation_controller/
+```
+
+/backend
+
+```
+workflow_engine/
+
+validation_engine/
+
+logging_engine/
+```
+
+/database
+
+/screenshots
+
+/logs
+
+/config
+
+---
+
+# Pharmacy Simulator
+
+Application Name:
+
+Pharmacy Simulator
+
+The simulator should resemble traditional Windows healthcare software.
+
+Design:
+
+* Tab based interface
+* Data grids
+* Modal forms
+* Heavy keyboard navigation
+
+Avoid modern web-like UI design.
+
+---
+
+# Patient Record
+
+Create a Patient Record window.
+
+Patient Record contains tabs.
+
+Tabs:
+
+1. General
+2. Family
+3. Allergies
+4. Medical Conditions
+5. Communications
+6. Other
+7. Patient Profile
+
+Navigation:
+
+Ctrl + Right Arrow
+
+Ctrl + Left Arrow
+
+Ctrl + Letter Shortcut
+
+Example:
+
+Ctrl + F
+
+opens Family tab.
+
+---
+
+# General Tab
+
+Fields:
+
+Patient ID (readonly)
+
+First Name
+
+Last Name
+
+Middle Name
+
+Date Of Birth
+
+Gender
+
+Phone
+
+Email
+
+Address Line 1
+
+Address Line 2
+
+City
+
+Province
+
+Postal Code
+
+Health Card Number
+
+Active
+
+Animal
+
+Deceased Date
+
+Delivery Type
+
+Delivery Route
+
+Price Group
+
+Comments
+
+All controls must expose:
+
+objectName
+
+accessibleName
+
+Examples:
+
+txt_first_name
+
+txt_last_name
+
+txt_dob
+
+txt_health_card
+
+---
+
+# Family Tab
+
+Family Grid
+
+Columns:
+
+Patient ID
+
+Name
+
+Relationship
+
+Buttons:
+
+Insert = Add Family Member
+
+Delete = Remove Family Member
+
+F2 = Edit Family Member
+
+Enter = Save
+
+---
+
+# Allergies Tab
+
+Grid:
+
+Allergy Name
+
+Source
+
+Date Reported
+
+Comments
+
+Buttons:
+
+Insert = Add Allergy
+
+Delete = Remove Allergy
+
+F2 = Edit Allergy
+
+Double Click = Edit
+
+Enter = Save
+
+Add Allergy Flow:
+
+1. Press Insert
+2. Open Search Window
+3. Search Allergy
+4. Select Allergy
+5. Open Allergy Information Form
+6. Save
+
+---
+
+# Medical Conditions Tab
+
+Grid:
+
+Condition
+
+Source
+
+Date Reported
+
+Comments
+
+Buttons:
+
+Insert = Add Condition
+
+Delete = Remove Condition
+
+F2 = Edit Condition
+
+Enter = Save
+
+Workflow:
+
+1. Press Insert
+2. Open Condition Search
+3. Search Condition
+4. Select Condition
+5. Complete Information Form
+6. Save
+
+---
+
+# Communications Tab
+
+Fields:
+
+Language
+
+Refill Type
+
+Pickup Preference
+
+Communication Methods Grid
+
+Communication Method Fields:
+
+Message Type
+
+Notification Type
+
+Phone Number
+
+Email Address
+
+Buttons:
+
+Insert = Add Method
+
+Delete = Remove Method
+
+F2 = Edit Method
+
+Save
+
+---
+
+# Other Tab
+
+Fields:
+
+Created Date
+
+Last Modified Date
+
+Last Prescription Filled
+
+Read Only
+
+---
+
+# Patient Profile Tab
+
+Create data grid.
+
+Columns:
+
+Rx Number
+
+Drug Name
+
+Quantity
+
+Remaining Quantity
+
+Prescriber
+
+Status
+
+Fill Date
+
+Unit Dose
+
+Rx Total
+
+---
+
+# Patient Profile Views
+
+Implement the following views.
+
+All Rxs
+
+Active Rxs
+
+Active Rxs With Passtimes
+
+Refillable Rxs
+
+Pricing Profile
+
+Not Dispensed OTC
+
+Filled In Error
+
+Switching Views:
+
+Shift + F3
+
+Shift + F5
+
+Shift + F6
+
+Shift + F7
+
+Shift + F8
+
+Shift + F9
+
+Shift + F10
+
+---
+
+# Dynamic Layout Mode
+
+Critical Requirement
+
+Create:
+
+Randomize Layout Toggle
+
+When enabled:
+
+* Sections move
+* Groups reorder
+* Panels reposition
+* Controls move
+
+BUT:
+
+accessibleName remains unchanged
+
+objectName remains unchanged
+
+Purpose:
+
+Simulate pharmacy-specific customizations.
+
+---
+
+# Accessibility Requirements
+
+Every control MUST expose:
+
+objectName
+
+accessibleName
+
+Examples:
+
+txt_first_name
+
+txt_last_name
+
+txt_dob
+
+grid_allergies
+
+btn_save
+
+btn_update
+
+Automation must never rely on coordinates.
+
+---
+
+# Automation Controller
+
+Create separate application.
+
+Functions:
+
+Detect Simulator
+
+Connect To Window
+
+Enumerate Controls
+
+Read Accessibility Tree
+
+Read Labels
+
+Read Values
+
+Enter Values
+
+Click Buttons
+
+Take Screenshots
+
+---
+
+# Automation Workflow
+
+Load Test Patient
+
+Example:
+
+{
+"first_name": "John",
+"last_name": "Doe",
+"dob": "1990-01-01",
+"phone": "5551234567",
+"email": "[john@example.com](mailto:john@example.com)",
+"health_card": "HC123456"
+}
+
+Automation Steps:
+
+1. Open Patient Record
+2. Locate First Name Field
+3. Enter Value
+4. Read Value Back
+5. Verify Match
+6. Continue
+7. Save Record
+
+---
+
+# Verification Engine
+
+After every field:
+
+Read field value
+
+Compare:
+
+Expected
+
+Actual
+
+If mismatch:
+
+Stop workflow
+
+Capture screenshot
+
+Create error log
+
+Require manual review
+
+---
+
+# Logging
+
+Store:
+
+Timestamp
+
+Workflow
+
+Field
+
+Expected Value
+
+Actual Value
+
+Result
+
+Window Name
+
+Control Name
+
+Error
+
+SQLite + JSON
+
+---
+
+# Screenshots
+
+Capture:
+
+Before Automation
+
+After Automation
+
+Before Save
+
+After Save
+
+On Error
+
+Store locally.
+
+---
+
+# Human Review Queue
+
+When validation fails:
+
+Move record to review queue.
+
+Show:
+
+Expected Value
+
+Actual Value
+
+Screenshot
+
+Error Reason
+
+---
+
+# Future OCR Integration
+
+Do not implement.
+
+Create interface only.
+
+Interfaces:
+
+IOCRProvider
+
+IExtractionProvider
+
+Future implementations:
+
+TesseractProvider
+
+PaddleOCRProvider
+
+OpenAIExtractionProvider
+
+GeminiExtractionProvider
+
+---
+
+# Future Kroll Integration
+
+Create adapter interfaces.
+
+IKrollAdapter
+
+Methods:
+
+open_patient()
+
+create_patient()
+
+update_patient()
+
+save_patient()
+
+search_patient()
+
+add_allergy()
+
+add_condition()
+
+Future adapters:
+
+KrollUIAutomationAdapter
+
+KrollKeyboardAdapter
+
+KrollVisionAdapter
+
+---
+
+# Success Criteria
+
+The prototype succeeds if:
+
+1. Dynamic layouts do not break automation.
+2. Automation uses accessibility metadata.
+3. Data entry is validated.
+4. Keyboard shortcuts function.
+5. Screenshots are captured.
+6. Audit logs are generated.
+7. Architecture supports future Kroll integration.
+
+The simulator should behave like a traditional Windows healthcare application and be suitable for validating automation workflows before access to a real Kroll environment.

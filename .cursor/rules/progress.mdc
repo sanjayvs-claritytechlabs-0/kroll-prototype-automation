@@ -1,0 +1,81 @@
+---
+alwaysApply: true
+---
+
+# Kroll Automation — Progress Tracker
+
+Last updated: 2026-06-03
+
+## Goal
+
+```text
+Inbox → OCR/Extract → Patient Search → Patient Record → Save
+```
+
+PoC simulator complete through Module 10 (UI automation against simulator).
+
+---
+
+## Completed
+
+### Modules 1–8
+- [x] Full Patient Record, Patient Search, Inbox, Document Viewer, OCR/extraction pipeline
+
+### Module 9 — Dynamic Layout Mode
+- [x] `chk_randomize_layout` on Patient Record window
+- [x] Shuffles General / Insurance / Communications layouts
+- [x] `objectName` / `accessibleName` unchanged on all controls
+
+### Module 10 — Automation Controller
+- [x] `apps/automation_controller/` — pywinauto UIA client
+- [x] Connect to simulator, enumerate controls, read/set by `objectName`
+- [x] `SimulatorUIAAdapter` + `fill_general_and_save` workflow
+- [x] `config/automation_test_patient.json` (John Doe PRD fields)
+- [x] Logs: `logs/automation.jsonl` | Screenshots: `screenshots/`
+
+## Current
+
+**Run Module 10 end-to-end**
+
+Terminal 1 — simulator:
+
+```powershell
+cd D:\disk_E\Byclarityy\kroll_pharmacy_project
+pip install -r requirements.txt
+python apps/pharmacy_simulator/main.py
+```
+
+Terminal 2 — automation (simulator must be running):
+
+```powershell
+python apps/automation_controller/main.py --connect-only
+python apps/automation_controller/main.py --enumerate
+python apps/automation_controller/main.py --workflow fill_save
+```
+
+Expected: new patient opens, General fields filled and verified, Save succeeds. Check `logs/automation.jsonl` and `screenshots/`.
+
+Optional: enable **Randomize Layout** on Patient Record before `fill_save` — automation should still find controls by `objectName`.
+
+## Next (Module 11)
+
+- [ ] Workflow engine + validation + audit logging (orchestrate inbox → extract → search → save)
+
+## After PoC modules — Real Kroll integration (discussion)
+
+| Approach | How pharmacist starts it |
+|----------|--------------------------|
+| Sidecar tray app | Icon in system tray after Kroll login → "Process document" |
+| Global hotkey | e.g. Ctrl+Shift+K while Kroll is focused |
+| Kroll launcher / menu | Partner plugin or scripted menu item (if Telus allows) |
+| Scheduled / queue | Background service watches inbox folder |
+
+Technical: `pywinauto` / UI Automation attaches to **Kroll window** (not embedded inside Kroll). Same `objectName` strategy if Kroll exposes UIA metadata; else vision + coordinates as fallback.
+
+`SimulatorUIAAdapter` → swap to `KrollUIAutomationAdapter` when ready.
+
+## Backlog
+
+| Module | Scope |
+|--------|--------|
+| 11 | Workflow engine + validation + audit logging |
