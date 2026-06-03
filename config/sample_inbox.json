@@ -1,0 +1,16 @@
+[
+  {
+    "source_type": "Fax",
+    "subject": "Patient Registration Form",
+    "sender": "416-555-0199",
+    "file_name": "patient_registration_fax.txt",
+    "relative_path": "config/sample_documents/patient_registration_fax.txt"
+  },
+  {
+    "source_type": "Email",
+    "subject": "New patient intake - registration",
+    "sender": "intake@clinic.example.com",
+    "file_name": "patient_registration_email.txt",
+    "relative_path": "config/sample_documents/patient_registration_email.txt"
+  }
+]

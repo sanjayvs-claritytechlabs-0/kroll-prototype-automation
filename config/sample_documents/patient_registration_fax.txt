@@ -1,0 +1,16 @@
+PATIENT REGISTRATION FORM (FAX)
+================================
+
+First Name: John
+Last Name: Doe
+Date of Birth: 1990-01-01
+Phone: 555-123-4567
+Email: john.doe@example.com
+Health Card: HC123456
+
+Address: 100 Main Street, Apt 4B
+City: Toronto  Province: ON  Postal: M5V 2T6
+
+Allergies: Penicillin
+
+Signature: _______________________

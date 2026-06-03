@@ -1,0 +1,13 @@
+Patient Registration - Email Attachment
+========================================
+
+Name: Jane Smith
+DOB: 1985-06-15
+Phone: 416-555-9876
+Email: jane.smith@example.com
+Health Card: ON987654321
+
+Address: 250 King Street West, Toronto ON M5H 1G1
+
+Insurance: OHIP (Provincial)
+Preferred contact: Phone call for pickup ready

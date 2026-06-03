@@ -1,0 +1,22 @@
+{
+  "description": "PRD automation test patient — John Doe general fields",
+  "fields": {
+    "txt_first_name": "John",
+    "txt_last_name": "Doe",
+    "txt_middle_name": "A",
+    "txt_dob": "1990-01-01",
+    "cmb_gender": "Male",
+    "txt_phone": "5551234567",
+    "txt_email": "john.doe@example.com",
+    "txt_address_line1": "100 Main Street",
+    "txt_address_line2": "Apt 4B",
+    "txt_city": "Toronto",
+    "cmb_province": "ON",
+    "txt_postal_code": "M5V 2T6",
+    "txt_health_card": "HC123456",
+    "cmb_delivery_type": "Pickup",
+    "cmb_delivery_route": "Standard",
+    "cmb_price_group": "Regular",
+    "txt_comments": "Automation test — Module 10 fill and save workflow."
+  }
+}

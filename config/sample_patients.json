@@ -1,0 +1,168 @@
+[
+  {
+    "id": "john_doe",
+    "label": "John Doe — PRD example",
+    "general": {
+      "first_name": "John",
+      "last_name": "Doe",
+      "middle_name": "A",
+      "dob": "1990-01-01",
+      "gender": "Male",
+      "phone": "5551234567",
+      "email": "john.doe@example.com",
+      "address_line1": "100 Main Street",
+      "address_line2": "Apt 4B",
+      "city": "Toronto",
+      "province": "ON",
+      "postal_code": "M5V 2T6",
+      "health_card": "HC123456",
+      "active": true,
+      "animal": false,
+      "deceased_date": "",
+      "delivery_type": "Pickup",
+      "delivery_route": "Standard",
+      "price_group": "Regular",
+      "comments": "Sample patient from PRD — primary automation test record."
+    },
+    "family": [
+      {
+        "member_patient_id": "P-FAM001",
+        "name": "Jane Doe",
+        "relationship": "Spouse"
+      },
+      {
+        "member_patient_id": "P-FAM002",
+        "name": "Jimmy Doe",
+        "relationship": "Child"
+      }
+    ],
+    "insurance": {
+      "plan_type": "Private",
+      "carrier": "Sun Life Financial",
+      "policy_number": "POL-8844221",
+      "group_number": "GRP-99001",
+      "expiry_date": "2027-12-31",
+      "relationship": "Self",
+      "cardholder_name": "John Doe"
+    },
+    "allergies": [
+      {
+        "allergy_name": "Penicillin",
+        "source": "Patient",
+        "date_reported": "2015-03-10",
+        "comments": "Rash and hives reported in 2015."
+      },
+      {
+        "allergy_name": "Latex",
+        "source": "Pharmacy",
+        "date_reported": "2020-08-01",
+        "comments": "Documented during intake."
+      }
+    ],
+    "communications": {
+      "preferences": {
+        "language": "English",
+        "refill_type": "Automatic",
+        "pickup_preference": "In Store"
+      },
+      "methods": [
+        {
+          "message_type": "Refill Reminder",
+          "notification_type": "SMS",
+          "phone_number": "5551234567",
+          "email_address": ""
+        },
+        {
+          "message_type": "Pickup Ready",
+          "notification_type": "Email",
+          "phone_number": "",
+          "email_address": "john.doe@example.com"
+        }
+      ]
+    }
+  },
+  {
+    "id": "jane_smith",
+    "label": "Jane Smith — delivery patient",
+    "general": {
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "middle_name": "Marie",
+      "dob": "1985-06-15",
+      "gender": "Female",
+      "phone": "4165559876",
+      "email": "jane.smith@example.com",
+      "address_line1": "250 King Street West",
+      "address_line2": "",
+      "city": "Toronto",
+      "province": "ON",
+      "postal_code": "M5H 1G1",
+      "health_card": "ON987654321",
+      "active": true,
+      "animal": false,
+      "deceased_date": "",
+      "delivery_type": "Delivery",
+      "delivery_route": "Express",
+      "price_group": "Senior",
+      "comments": "Prefers afternoon delivery. Sample payload #2."
+    },
+    "family": [
+      {
+        "member_patient_id": "P-FAM010",
+        "name": "Robert Smith",
+        "relationship": "Spouse"
+      }
+    ],
+    "insurance": {
+      "plan_type": "Provincial",
+      "carrier": "OHIP",
+      "policy_number": "ON987654321",
+      "group_number": "",
+      "expiry_date": "",
+      "relationship": "Self",
+      "cardholder_name": "Jane Smith"
+    },
+    "communications": {
+      "preferences": {
+        "language": "English",
+        "refill_type": "Call When Ready",
+        "pickup_preference": "Delivery"
+      },
+      "methods": [
+        {
+          "message_type": "Pickup Ready",
+          "notification_type": "Phone Call",
+          "phone_number": "4165559876",
+          "email_address": ""
+        }
+      ]
+    }
+  },
+  {
+    "id": "buddy_animal",
+    "label": "Buddy — animal patient",
+    "general": {
+      "first_name": "Buddy",
+      "last_name": "Thompson",
+      "middle_name": "",
+      "dob": "2019-03-22",
+      "gender": "Male",
+      "phone": "9055554411",
+      "email": "vet.client@example.com",
+      "address_line1": "88 Oak Avenue",
+      "address_line2": "",
+      "city": "Mississauga",
+      "province": "ON",
+      "postal_code": "L5B 1M5",
+      "health_card": "VET-PET-001",
+      "active": true,
+      "animal": true,
+      "deceased_date": "",
+      "delivery_type": "Pickup",
+      "delivery_route": "Standard",
+      "price_group": "Regular",
+      "comments": "Animal patient — owner: Sarah Thompson. Sample payload #3."
+    },
+    "family": []
+  }
+]

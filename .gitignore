@@ -1,0 +1,9 @@
+database/pharmacy.db
+database/inbox/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.conda/
+.cursor/ 
