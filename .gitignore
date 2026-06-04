@@ -1,4 +1,5 @@
 database/pharmacy.db
+database/workflow_audit.db
 database/inbox/
 __pycache__/
 *.py[cod]

@@ -123,3 +123,55 @@
 {"timestamp": "2026-06-03T16:40:08.060466+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_comments", "expected": "Automation test \u2014 Module 10 fill and save workflow.", "actual": "Automation test \u2014 Module 10 fill and save workflow.", "result": "pass", "control_name": "txt_comments"}
 {"timestamp": "2026-06-03T16:40:14.668128+00:00", "workflow": "simulator_uia", "event": "save_clicked", "result": "ok"}
 {"timestamp": "2026-06-03T16:40:14.669128+00:00", "workflow": "fill_general_and_save", "event": "workflow_complete", "result": "pass"}
+{"timestamp": "2026-06-04T07:53:15.986907+00:00", "workflow": "simulator_uia", "event": "connected", "window_name": "win_main"}
+{"timestamp": "2026-06-04T07:53:18.070491+00:00", "workflow": "simulator_uia", "event": "open_patient_attempt", "result": "btn_new_patient"}
+{"timestamp": "2026-06-04T07:53:20.528857+00:00", "workflow": "simulator_uia", "event": "patient_record_opened", "result": "btn_new_patient", "window_name": "win_patient_record"}
+{"timestamp": "2026-06-04T07:53:20.898938+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_first_name", "expected": "John", "actual": "John", "result": "pass", "control_name": "txt_first_name"}
+{"timestamp": "2026-06-04T07:53:21.134155+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_last_name", "expected": "Doe", "actual": "Doe", "result": "pass", "control_name": "txt_last_name"}
+{"timestamp": "2026-06-04T07:53:21.314623+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_middle_name", "expected": "A", "actual": "A", "result": "pass", "control_name": "txt_middle_name"}
+{"timestamp": "2026-06-04T07:53:21.509646+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_dob", "expected": "1990-01-01", "actual": "1990-01-01", "result": "pass", "control_name": "txt_dob"}
+{"timestamp": "2026-06-04T07:53:22.513976+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "cmb_gender", "expected": "Male", "actual": "Male", "result": "pass", "control_name": "cmb_gender"}
+{"timestamp": "2026-06-04T07:53:22.722943+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_phone", "expected": "5551234567", "actual": "5551234567", "result": "pass", "control_name": "txt_phone"}
+{"timestamp": "2026-06-04T07:53:22.924061+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_email", "expected": "john.doe@example.com", "actual": "john.doe@example.com", "result": "pass", "control_name": "txt_email"}
+{"timestamp": "2026-06-04T07:53:23.173169+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_address_line1", "expected": "100 Main Street", "actual": "100 Main Street", "result": "pass", "control_name": "txt_address_line1"}
+{"timestamp": "2026-06-04T07:53:23.394292+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_address_line2", "expected": "Apt 4B", "actual": "Apt 4B", "result": "pass", "control_name": "txt_address_line2"}
+{"timestamp": "2026-06-04T07:53:23.616780+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_city", "expected": "Toronto", "actual": "Toronto", "result": "pass", "control_name": "txt_city"}
+{"timestamp": "2026-06-04T07:53:26.133455+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "cmb_province", "expected": "ON", "actual": "ON", "result": "pass", "control_name": "cmb_province"}
+{"timestamp": "2026-06-04T07:53:26.346785+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_postal_code", "expected": "M5V 2T6", "actual": "M5V 2T6", "result": "pass", "control_name": "txt_postal_code"}
+{"timestamp": "2026-06-04T07:53:26.607387+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_health_card", "expected": "HC123456", "actual": "HC123456", "result": "pass", "control_name": "txt_health_card"}
+{"timestamp": "2026-06-04T07:53:27.537704+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "cmb_delivery_type", "expected": "Pickup", "actual": "Pickup", "result": "pass", "control_name": "cmb_delivery_type"}
+{"timestamp": "2026-06-04T07:53:28.648988+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "cmb_delivery_route", "expected": "Standard", "actual": "Standard", "result": "pass", "control_name": "cmb_delivery_route"}
+{"timestamp": "2026-06-04T07:53:29.794625+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "cmb_price_group", "expected": "Regular", "actual": "Regular", "result": "pass", "control_name": "cmb_price_group"}
+{"timestamp": "2026-06-04T07:53:30.063160+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_comments", "expected": "Automation test \u2014 Module 10 fill and save workflow.", "actual": "Automation test \u2014 Module 10 fill and save workflow.", "result": "pass", "control_name": "txt_comments"}
+{"timestamp": "2026-06-04T07:53:36.706846+00:00", "workflow": "simulator_uia", "event": "save_clicked", "result": "ok"}
+{"timestamp": "2026-06-04T07:53:36.707878+00:00", "workflow": "fill_general_and_save", "event": "workflow_complete", "result": "pass"}
+{"timestamp": "2026-06-04T10:07:58.528847+00:00", "workflow": "simulator_uia", "event": "connected", "window_name": "win_main"}
+{"timestamp": "2026-06-04T10:08:17.916053+00:00", "workflow": "simulator_uia", "event": "connected", "window_name": "win_main"}
+{"timestamp": "2026-06-04T10:09:50.944584+00:00", "workflow": "simulator_uia", "event": "connected", "window_name": "win_main"}
+{"timestamp": "2026-06-04T10:14:10.819635+00:00", "workflow": "simulator_uia", "event": "connected", "window_name": "win_main"}
+{"timestamp": "2026-06-04T10:18:28.111827+00:00", "workflow": "simulator_uia", "event": "connected", "window_name": "win_main"}
+{"timestamp": "2026-06-04T10:18:29.374822+00:00", "workflow": "simulator_uia", "event": "open_patient_search_attempt", "result": "btn_patient_search"}
+{"timestamp": "2026-06-04T10:18:34.021564+00:00", "workflow": "simulator_uia", "event": "patient_search_opened", "result": "btn_patient_search", "window_name": "main.py - kroll_pharmacy_project - Cursor"}
+{"timestamp": "2026-06-04T10:19:25.475666+00:00", "workflow": "simulator_uia", "event": "connected", "window_name": "win_main"}
+{"timestamp": "2026-06-04T10:27:02.670561+00:00", "workflow": "simulator_uia", "event": "connected", "window_name": "win_main"}
+{"timestamp": "2026-06-04T10:27:03.756417+00:00", "workflow": "simulator_uia", "event": "open_inbox_attempt", "result": "btn_inbox"}
+{"timestamp": "2026-06-04T10:27:04.008076+00:00", "workflow": "simulator_uia", "event": "inbox_opened", "result": "btn_inbox"}
+{"timestamp": "2026-06-04T10:32:54.761748+00:00", "workflow": "simulator_uia", "event": "connected", "window_name": "win_main"}
+{"timestamp": "2026-06-04T10:32:56.258700+00:00", "workflow": "simulator_uia", "event": "open_patient_search_attempt", "result": "btn_patient_search"}
+{"timestamp": "2026-06-04T10:32:57.127247+00:00", "workflow": "simulator_uia", "event": "patient_search_opened", "result": "btn_patient_search", "window_name": "win_patient_search"}
+{"timestamp": "2026-06-04T10:33:00.258135+00:00", "workflow": "simulator_uia", "event": "patient_record_from_search"}
+{"timestamp": "2026-06-04T10:33:00.828053+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_first_name", "expected": "John", "actual": "John", "result": "pass", "control_name": "txt_first_name"}
+{"timestamp": "2026-06-04T10:33:01.036758+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_last_name", "expected": "Doe", "actual": "Doe", "result": "pass", "control_name": "txt_last_name"}
+{"timestamp": "2026-06-04T10:33:01.277817+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_dob", "expected": "1990-01-01", "actual": "1990-01-01", "result": "pass", "control_name": "txt_dob"}
+{"timestamp": "2026-06-04T10:33:02.257849+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "cmb_gender", "expected": "Male", "actual": "Male", "result": "pass", "control_name": "cmb_gender"}
+{"timestamp": "2026-06-04T10:33:02.486700+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_phone", "expected": "5551234567", "actual": "5551234567", "result": "pass", "control_name": "txt_phone"}
+{"timestamp": "2026-06-04T10:33:02.712169+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_email", "expected": "john.doe@example.com", "actual": "john.doe@example.com", "result": "pass", "control_name": "txt_email"}
+{"timestamp": "2026-06-04T10:33:02.989142+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_health_card", "expected": "HC123456", "actual": "HC123456", "result": "pass", "control_name": "txt_health_card"}
+{"timestamp": "2026-06-04T10:33:03.214906+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_address_line1", "expected": "100 Main Street, Apt 4B", "actual": "100 Main Street, Apt 4B", "result": "pass", "control_name": "txt_address_line1"}
+{"timestamp": "2026-06-04T10:33:03.461986+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_city", "expected": "Toronto", "actual": "Toronto", "result": "pass", "control_name": "txt_city"}
+{"timestamp": "2026-06-04T10:33:05.984410+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "cmb_province", "expected": "ON", "actual": "ON", "result": "pass", "control_name": "cmb_province"}
+{"timestamp": "2026-06-04T10:33:06.239700+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "txt_postal_code", "expected": "M5V 2T6", "actual": "M5V 2T6", "result": "pass", "control_name": "txt_postal_code"}
+{"timestamp": "2026-06-04T10:33:07.225179+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "cmb_delivery_type", "expected": "Pickup", "actual": "Pickup", "result": "pass", "control_name": "cmb_delivery_type"}
+{"timestamp": "2026-06-04T10:33:08.340510+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "cmb_delivery_route", "expected": "Standard", "actual": "Standard", "result": "pass", "control_name": "cmb_delivery_route"}
+{"timestamp": "2026-06-04T10:33:09.471558+00:00", "workflow": "simulator_uia", "event": "field_verify", "field": "cmb_price_group", "expected": "Regular", "actual": "Regular", "result": "pass", "control_name": "cmb_price_group"}
+{"timestamp": "2026-06-04T10:33:16.136501+00:00", "workflow": "simulator_uia", "event": "save_clicked", "result": "ok"}

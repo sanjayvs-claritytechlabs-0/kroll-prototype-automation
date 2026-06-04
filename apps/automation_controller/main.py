@@ -39,8 +39,14 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--workflow",
-        choices=("fill_save",),
+        choices=("fill_save", "inbox_to_save"),
         help="Run an end-to-end workflow script",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=("ui", "hybrid"),
+        default="ui",
+        help="For inbox_to_save: ui = full desktop path; hybrid = headless extract + search UI",
     )
     parser.add_argument(
         "--enumerate",
@@ -103,7 +109,9 @@ def _print_controls(records: list[dict[str, str]]) -> None:
 def main() -> int:
     args = _parse_args()
     if not any((args.workflow, args.enumerate, args.connect_only)):
-        print("Specify --workflow fill_save, --enumerate, or --connect-only")
+        print(
+            "Specify --workflow fill_save|inbox_to_save, --enumerate, or --connect-only"
+        )
         return 2
 
     if _PYWINAUTO_IMPORT_ERROR is not None:
@@ -143,6 +151,28 @@ def main() -> int:
                 file=sys.stderr,
             )
             _print_last_automation_error()
+            return 1
+
+        if args.workflow == "inbox_to_save":
+            from apps.workflow_engine.workflows.inbox_to_save import (
+                load_config,
+                run as run_inbox_to_save,
+            )
+
+            config = load_config()
+            print(f"Running workflow 'inbox_to_save' (mode={args.mode})...")
+            ok, ctx = run_inbox_to_save(adapter, mode=args.mode, config=config)
+            if ok:
+                print(
+                    f"Workflow completed — run_id={ctx.run_id}  "
+                    f"patient_id={ctx.patient_id or 'n/a'}"
+                )
+                return 0
+            print(
+                "Workflow failed — see database/workflow_audit.db and "
+                "logs/workflow_audit.jsonl",
+                file=sys.stderr,
+            )
             return 1
     except ControlNotFoundError as exc:
         print(str(exc), file=sys.stderr)

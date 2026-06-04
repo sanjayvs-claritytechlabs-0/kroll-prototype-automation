@@ -22,6 +22,27 @@ MAIN_TITLE_RE = r"^Kroll by Telus Health$"
 MAIN_AUTO_ID = "win_main"
 PATIENT_RECORD_TITLE_RE = r"Patient Record.*"
 PATIENT_RECORD_AUTO_ID = "win_patient_record"
+INBOX_AUTO_ID = "win_inbox"
+PATIENT_SEARCH_AUTO_ID = "win_patient_search"
+PATIENT_SEARCH_TITLE_RE = r"Patient Search.*"
+DOCUMENT_VIEWER_AUTO_ID = "win_document_viewer"
+DOCUMENT_VIEWER_TITLE_RE = r"Document Viewer.*"
+DOCUMENT_VIEWER_SIGNATURES = (
+    "btn_process_document",
+    "btn_close_document_viewer",
+    "lbl_document_meta",
+)
+EXTRACTION_DIALOG_AUTO_ID = "dlg_extraction_result"
+INBOX_TITLE_RE = r"Inbox.*Incoming.*|Inbox.*"
+
+# Required descendant control to confirm a window belongs to our app (not IDE/browser).
+WINDOW_SIGNATURE: dict[str, str] = {
+    INBOX_AUTO_ID: "grid_inbox",
+    PATIENT_SEARCH_AUTO_ID: "txt_search_first_name",
+    PATIENT_RECORD_AUTO_ID: "btn_save",
+    DOCUMENT_VIEWER_AUTO_ID: "btn_process_document",
+    EXTRACTION_DIALOG_AUTO_ID: "btn_extraction_search",
+}
 
 
 @dataclass(frozen=True)
@@ -44,6 +65,7 @@ class UIAClient:
         self._timeout = timeout
         self._desktop = Desktop(backend=backend)
         self._main_window: BaseWrapper | None = None
+        self._simulator_pid: int | None = None
 
     @property
     def main_window(self) -> BaseWrapper:
@@ -51,10 +73,30 @@ class UIAClient:
             raise RuntimeError("Not connected — call connect() first")
         return self._main_window
 
+    def _bind_simulator_process(self, window: BaseWrapper) -> None:
+        self._simulator_pid = int(window.element_info.process_id)
+
+    def _is_simulator_process(self, win: BaseWrapper) -> bool:
+        if self._simulator_pid is None:
+            return True
+        try:
+            return int(win.element_info.process_id) == self._simulator_pid
+        except Exception:
+            return False
+
+    def _simulator_windows(self) -> list[BaseWrapper]:
+        return [w for w in self._desktop.windows() if self._is_simulator_process(w)]
+
+    def _window_has_signature(self, win: BaseWrapper, marker: str) -> bool:
+        if not self._is_simulator_process(win):
+            return False
+        signature = WINDOW_SIGNATURE.get(marker, marker)
+        return self._scan_descendant_by_object_name(win, signature) is not None
+
     def list_visible_window_titles(self, limit: int = 25) -> list[str]:
         """Top-level window titles visible to UIA (for diagnostics)."""
         titles: list[str] = []
-        for win in self._desktop.windows():
+        for win in self._simulator_windows():
             try:
                 text = (win.window_text() or "").strip()
                 if text and text not in titles:
@@ -119,15 +161,17 @@ class UIAClient:
             return False
 
     def _has_patient_record_markers(self, win: BaseWrapper) -> bool:
-        if self._is_patient_record_window(win):
+        if not self._is_simulator_process(win):
+            return False
+        if self._scan_descendant_by_object_name(win, "btn_save") is not None:
             return True
-        return self._scan_descendant_by_object_name(win, "btn_save") is not None
+        return self._is_patient_record_window(win)
 
     def list_patient_record_windows(self) -> list[BaseWrapper]:
         """Top-level windows that look like Patient Record (name or btn_save inside)."""
         handles_seen: set[int] = set()
         windows: list[BaseWrapper] = []
-        for win in self._desktop.windows():
+        for win in self._simulator_windows():
             try:
                 if not self._has_patient_record_markers(win):
                     continue
@@ -171,6 +215,221 @@ class UIAClient:
         self.bring_to_foreground(main)
         main.type_keys("^n", set_foreground=True)
         return "shortcut_ctrl_n_forced"
+
+    def try_open_patient_search(self, main: BaseWrapper) -> str:
+        """Try several UI paths to open Patient Search; returns the method used."""
+        self.bring_to_foreground(main)
+        time.sleep(0.35)
+
+        for method, action in (
+            (
+                "btn_patient_search",
+                lambda: self._click_descendant(main, "btn_patient_search"),
+            ),
+            (
+                "menu_patient_search",
+                lambda: main.type_keys("%ps", pause=0.08, set_foreground=True),
+            ),
+            ("shortcut_f3", lambda: main.type_keys("{F3}", set_foreground=True)),
+            (
+                "btn_patient_search_home",
+                lambda: self._click_descendant(main, "btn_patient_search_home"),
+            ),
+        ):
+            try:
+                action()
+                return method
+            except (ControlNotFoundError, PywinautoTimeoutError, OSError):
+                self.bring_to_foreground(main)
+                continue
+
+        self.bring_to_foreground(main)
+        main.type_keys("{F3}", set_foreground=True)
+        return "shortcut_f3_forced"
+
+    def try_open_inbox(self, main: BaseWrapper) -> str:
+        """Try several UI paths to open Inbox; returns the method used."""
+        self.bring_to_foreground(main)
+        time.sleep(0.25)
+
+        for method, action in (
+            ("btn_inbox", lambda: self._click_descendant(main, "btn_inbox")),
+            (
+                "menu_documents_inbox",
+                lambda: main.type_keys("%di", pause=0.08, set_foreground=True),
+            ),
+            ("shortcut_f4", lambda: main.type_keys("{F4}", set_foreground=True)),
+            ("btn_inbox_home", lambda: self._click_descendant(main, "btn_inbox_home")),
+        ):
+            try:
+                action()
+                return method
+            except (ControlNotFoundError, PywinautoTimeoutError, OSError):
+                self.bring_to_foreground(main)
+                continue
+
+        self.bring_to_foreground(main)
+        main.type_keys("{F4}", set_foreground=True)
+        return "shortcut_f4_forced"
+
+    def _is_patient_search_window(self, win: BaseWrapper) -> bool:
+        title_pattern = re.compile(PATIENT_SEARCH_TITLE_RE)
+        try:
+            info = win.element_info
+            auto_id = (info.automation_id or "").strip()
+            name = (info.name or "").strip()
+            text = (win.window_text() or "").strip()
+            return (
+                auto_id == PATIENT_SEARCH_AUTO_ID
+                or name == PATIENT_SEARCH_AUTO_ID
+                or PATIENT_SEARCH_AUTO_ID in auto_id
+                or PATIENT_SEARCH_AUTO_ID in name
+                or bool(title_pattern.search(text))
+                or bool(title_pattern.search(name))
+            )
+        except Exception:
+            return False
+
+    def _has_patient_search_markers(self, win: BaseWrapper) -> bool:
+        if not self._is_simulator_process(win):
+            return False
+        return self._scan_descendant_by_object_name(win, "txt_search_first_name") is not None
+
+    def list_patient_search_windows(self) -> list[BaseWrapper]:
+        handles_seen: set[int] = set()
+        windows: list[BaseWrapper] = []
+        for win in self._simulator_windows():
+            try:
+                if not self._has_patient_search_markers(win):
+                    continue
+                handle = self._window_handle(win)
+                if handle in handles_seen:
+                    continue
+                handles_seen.add(handle)
+                windows.append(win)
+            except Exception:
+                continue
+        return windows
+
+    def wait_for_patient_search(self, timeout: float | None = None) -> BaseWrapper:
+        """Wait for Patient Search by objectName, title, or btn_search_patient inside."""
+        wait_for = timeout if timeout is not None else self._timeout
+        end = time.monotonic() + wait_for
+        while time.monotonic() < end:
+            candidates = self.list_patient_search_windows()
+            if candidates:
+                window = candidates[-1]
+                self.bring_to_foreground(window)
+                return window
+            time.sleep(0.35)
+
+        sim_titles = [
+            (w.window_text() or "").strip() for w in self._simulator_windows()
+        ]
+        hint = ""
+        if sim_titles:
+            hint = f"\nSimulator process windows: {sim_titles!r}"
+
+        raise ControlNotFoundError(
+            f"Patient Search window not found within {wait_for}s "
+            f"(simulator PID {self._simulator_pid}, need txt_search_first_name inside window)."
+            f"{hint}\n"
+            "Leave the Kroll simulator main window open and focused (not Cursor/terminal)."
+        )
+
+    def list_inbox_windows(self) -> list[BaseWrapper]:
+        handles_seen: set[int] = set()
+        windows: list[BaseWrapper] = []
+        for win in self._simulator_windows():
+            try:
+                if self._window_has_signature(win, INBOX_AUTO_ID):
+                    handle = self._window_handle(win)
+                    if handle in handles_seen:
+                        continue
+                    handles_seen.add(handle)
+                    windows.append(win)
+            except Exception:
+                continue
+        return windows
+
+    def wait_for_inbox(self, timeout: float | None = None) -> BaseWrapper:
+        wait_for = timeout if timeout is not None else self._timeout
+        end = time.monotonic() + wait_for
+        while time.monotonic() < end:
+            candidates = self.list_inbox_windows()
+            if candidates:
+                window = candidates[-1]
+                self.bring_to_foreground(window)
+                return window
+            time.sleep(0.3)
+        raise ControlNotFoundError(
+            f"Inbox window not found within {wait_for}s "
+            f"(simulator PID {self._simulator_pid}, need grid_inbox).\n"
+            "Open the simulator main window first, then retry."
+        )
+
+    def _has_document_viewer_markers(self, win: BaseWrapper) -> bool:
+        if not self._is_simulator_process(win):
+            return False
+        try:
+            text = (win.window_text() or "").strip()
+            if re.search(DOCUMENT_VIEWER_TITLE_RE, text):
+                return True
+            for marker in DOCUMENT_VIEWER_SIGNATURES:
+                if self._scan_descendant_by_object_name(win, marker) is not None:
+                    return True
+        except Exception:
+            return False
+        return False
+
+    def list_document_viewer_windows(self) -> list[BaseWrapper]:
+        handles_seen: set[int] = set()
+        windows: list[BaseWrapper] = []
+        for win in self._simulator_windows():
+            try:
+                if not self._has_document_viewer_markers(win):
+                    continue
+                handle = self._window_handle(win)
+                if handle in handles_seen:
+                    continue
+                handles_seen.add(handle)
+                windows.append(win)
+            except Exception:
+                continue
+        return windows
+
+    def wait_for_document_viewer(self, timeout: float | None = None) -> BaseWrapper:
+        wait_for = timeout if timeout is not None else self._timeout
+        end = time.monotonic() + wait_for
+        while time.monotonic() < end:
+            candidates = self.list_document_viewer_windows()
+            if candidates:
+                window = candidates[-1]
+                self.bring_to_foreground(window)
+                return window
+            time.sleep(0.3)
+        raise ControlNotFoundError(
+            f"Document Viewer not found within {wait_for}s "
+            f"(simulator PID {self._simulator_pid}, need btn_process_document or "
+            f"Document Viewer title).\n"
+            "Select an inbox row first, then Open or double-click the row."
+        )
+
+    def open_document_from_inbox(self, inbox_scope: BaseWrapper) -> str:
+        """Open viewer for the currently highlighted inbox row (double-click or Open)."""
+        self.bring_to_foreground(inbox_scope)
+        grid = self.find_control(inbox_scope, "grid_inbox")
+        grid.click_input()
+        time.sleep(0.2)
+        try:
+            grid.double_click_input()
+            time.sleep(0.5)
+            return "grid_double_click"
+        except Exception:
+            pass
+        self._click_descendant(inbox_scope, "btn_inbox_open")
+        time.sleep(0.4)
+        return "btn_inbox_open"
 
     @staticmethod
     def _window_handle(win: BaseWrapper) -> int:
@@ -216,11 +475,13 @@ class UIAClient:
             scanned = self._scan_for_main_window()
             if scanned is not None:
                 self._main_window = scanned
+                self._bind_simulator_process(scanned)
                 return scanned
             for criteria in search_sets:
                 window = self._try_attach_window(criteria)
                 if window is not None:
                     self._main_window = window
+                    self._bind_simulator_process(window)
                     return window
             last_error = PywinautoTimeoutError("no matching simulator window")
             time.sleep(0.35)
@@ -293,7 +554,7 @@ class UIAClient:
             )
         with_save = [
             (w.window_text() or "").strip()
-            for w in self._desktop.windows()
+            for w in self._simulator_windows()
             if self._scan_descendant_by_object_name(w, "btn_save") is not None
         ]
         save_hint = ""
@@ -306,6 +567,56 @@ class UIAClient:
             f"{save_hint}\n"
             "Ensure the simulator main window is focused and not minimized."
         )
+
+    def wait_for_window_marker(
+        self,
+        marker: str,
+        timeout: float | None = None,
+    ) -> BaseWrapper:
+        """Wait for a simulator window with a known control signature (not IDE windows)."""
+        if marker == INBOX_AUTO_ID:
+            return self.wait_for_inbox(timeout=timeout)
+        if marker == PATIENT_SEARCH_AUTO_ID:
+            return self.wait_for_patient_search(timeout=timeout)
+        if marker == DOCUMENT_VIEWER_AUTO_ID:
+            return self.wait_for_document_viewer(timeout=timeout)
+
+        wait_for = timeout if timeout is not None else self._timeout
+        end = time.monotonic() + wait_for
+        while time.monotonic() < end:
+            for win in self._simulator_windows():
+                try:
+                    if self._window_has_signature(win, marker):
+                        win.wait("exists visible", timeout=2)
+                        self.bring_to_foreground(win)
+                        return win
+                except Exception:
+                    continue
+            time.sleep(0.3)
+        raise ControlNotFoundError(
+            f"Window '{marker}' not found within {wait_for}s "
+            f"(simulator PID {self._simulator_pid}, "
+            f"signature={WINDOW_SIGNATURE.get(marker, marker)!r})."
+        )
+
+    def select_table_row(
+        self,
+        scope: BaseWrapper,
+        grid_object_name: str,
+        row_index: int = 0,
+    ) -> None:
+        """Select a QTableWidget row via keyboard (layout-independent)."""
+        self.bring_to_foreground(scope)
+        grid = self.find_control(scope, grid_object_name)
+        grid.click_input()
+        time.sleep(0.2)
+        grid.type_keys("{HOME}", set_foreground=True)
+        time.sleep(0.1)
+        for _ in range(row_index):
+            grid.type_keys("{DOWN}", set_foreground=True)
+            time.sleep(0.05)
+        grid.type_keys(" ", set_foreground=True)
+        time.sleep(0.25)
 
     def _scan_descendant_by_object_name(
         self, scope: BaseWrapper, object_name: str

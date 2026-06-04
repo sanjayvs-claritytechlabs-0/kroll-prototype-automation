@@ -12,7 +12,7 @@ Last updated: 2026-06-03
 Inbox → OCR/Extract → Patient Search → Patient Record → Save
 ```
 
-PoC simulator complete through Module 10 (UI automation against simulator).
+PoC complete through Module 11 (workflow engine + audit).
 
 ---
 
@@ -22,20 +22,23 @@ PoC simulator complete through Module 10 (UI automation against simulator).
 - [x] Full Patient Record, Patient Search, Inbox, Document Viewer, OCR/extraction pipeline
 
 ### Module 9 — Dynamic Layout Mode
-- [x] `chk_randomize_layout` on Patient Record window
-- [x] Shuffles General / Insurance / Communications layouts
-- [x] `objectName` / `accessibleName` unchanged on all controls
+- [x] `chk_randomize_layout`; `objectName` / `accessibleName` unchanged
 
 ### Module 10 — Automation Controller
-- [x] `apps/automation_controller/` — pywinauto UIA client
-- [x] Connect to simulator, enumerate controls, read/set by `objectName`
-- [x] `SimulatorUIAAdapter` + `fill_general_and_save` workflow
-- [x] `config/automation_test_patient.json` (John Doe PRD fields)
+- [x] `apps/automation_controller/` — pywinauto UIA, `fill_save` workflow
 - [x] Logs: `logs/automation.jsonl` | Screenshots: `screenshots/`
+
+### Module 11 — Workflow Engine
+- [x] `apps/workflow_engine/` — sequential runner, field verification, stop-on-fail
+- [x] Audit: SQLite `database/workflow_audit.db` + `logs/workflow_audit.jsonl`
+- [x] Human review queue (`review_queue` table, `--list-reviews`)
+- [x] Workflow `inbox_to_save` — UI path (Inbox → Process → Search → Create → Fill → Save)
+- [x] Hybrid mode — headless extract + F3 search UI path
+- [x] Config: `config/workflow_inbox_to_save.json`
 
 ## Current
 
-**Run Module 10 end-to-end**
+**Run Module 11 end-to-end**
 
 Terminal 1 — simulator:
 
@@ -45,23 +48,31 @@ pip install -r requirements.txt
 python apps/pharmacy_simulator/main.py
 ```
 
-Terminal 2 — automation (simulator must be running):
+Terminal 2 — workflow (simulator running, main window visible):
 
 ```powershell
-python apps/automation_controller/main.py --connect-only
-python apps/automation_controller/main.py --enumerate
-python apps/automation_controller/main.py --workflow fill_save
+python apps/workflow_engine/main.py --workflow inbox_to_save
+python apps/workflow_engine/main.py --workflow inbox_to_save --mode hybrid
+python apps/workflow_engine/main.py --list-reviews
 ```
 
-Expected: new patient opens, General fields filled and verified, Save succeeds. Check `logs/automation.jsonl` and `screenshots/`.
+Or via automation controller:
 
-Optional: enable **Randomize Layout** on Patient Record before `fill_save` — automation should still find controls by `objectName`.
+```powershell
+python apps/automation_controller/main.py --workflow inbox_to_save
+```
 
-## Next (Module 11)
+On failure: check `database/workflow_audit.db`, `logs/workflow_audit.jsonl`, `screenshots/error_*.png`.
 
-- [ ] Workflow engine + validation + audit logging (orchestrate inbox → extract → search → save)
+**Important:** Start the simulator **before** the workflow. Keep the **Kroll main window** focused (not Cursor/terminal). Automation only attaches to the simulator **process** (same PID as `win_main`).
 
-## After PoC modules — Real Kroll integration (discussion)
+**Fastest path:** `--mode hybrid` (skips Inbox UI; headless extract + search/record UI only).
+
+## PoC status
+
+All planned PoC modules (1–11) implemented. Next: real Kroll integration discussion / production hardening.
+
+## After PoC — Real Kroll integration (discussion)
 
 | Approach | How pharmacist starts it |
 |----------|--------------------------|
@@ -70,12 +81,12 @@ Optional: enable **Randomize Layout** on Patient Record before `fill_save` — a
 | Kroll launcher / menu | Partner plugin or scripted menu item (if Telus allows) |
 | Scheduled / queue | Background service watches inbox folder |
 
-Technical: `pywinauto` / UI Automation attaches to **Kroll window** (not embedded inside Kroll). Same `objectName` strategy if Kroll exposes UIA metadata; else vision + coordinates as fallback.
+Technical: `pywinauto` / UI Automation attaches to **Kroll window**. `SimulatorUIAAdapter` → `KrollUIAutomationAdapter` when ready.
 
-`SimulatorUIAAdapter` → swap to `KrollUIAutomationAdapter` when ready.
+## Backlog (optional)
 
-## Backlog
-
-| Module | Scope |
-|--------|--------|
-| 11 | Workflow engine + validation + audit logging |
+| Item | Scope |
+|------|--------|
+| FastAPI backend | HTTP workflow API (PRD planned) |
+| Real OCR / LLM providers | Tesseract, OpenAI, Gemini stubs exist |
+| Tray / hotkey launcher | Start workflows outside terminal |

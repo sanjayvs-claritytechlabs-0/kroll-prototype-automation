@@ -1,0 +1,36 @@
+{
+  "description": "Module 11 — Inbox → extract → search → new patient → save",
+  "document_file_name": "patient_registration_fax.txt",
+  "document_row": 0,
+  "expect_extraction": {
+    "first_name": "John",
+    "last_name": "Doe",
+    "dob": "1990-01-01"
+  },
+  "record_defaults": {
+    "cmb_gender": "Male",
+    "txt_address_line1": "100 Main Street",
+    "txt_city": "Toronto",
+    "cmb_province": "ON",
+    "txt_postal_code": "M5V 2T6",
+    "cmb_delivery_type": "Pickup",
+    "cmb_delivery_route": "Standard",
+    "cmb_price_group": "Regular"
+  },
+  "record_field_order": [
+    "txt_first_name",
+    "txt_last_name",
+    "txt_dob",
+    "cmb_gender",
+    "txt_phone",
+    "txt_email",
+    "txt_health_card",
+    "txt_address_line1",
+    "txt_city",
+    "cmb_province",
+    "txt_postal_code",
+    "cmb_delivery_type",
+    "cmb_delivery_route",
+    "cmb_price_group"
+  ]
+}
