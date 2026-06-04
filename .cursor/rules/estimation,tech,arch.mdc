@@ -1,0 +1,76 @@
+---
+alwaysApply: false
+description: Client brief — tech stack, architecture, timeline (2 devs + Cursor)
+---
+
+# Kroll Automation — Client Brief
+
+**Scope:** Build a Windows **automation application only** that drives the client’s existing **Kroll desktop app** (Telus). We do **not** build or replace Kroll. PoC (workflow engine, UIA automation, audit) is already complete.
+
+**Team:** 2 developers, Cursor AI–assisted.
+
+---
+
+## 1. Technology stack
+
+| Layer | Technology |
+|-------|------------|
+| Language | Python 3.11+ |
+| Desktop automation | pywinauto (Microsoft UI Automation) |
+| Agent UI | PyQt6 or system tray (pystray) |
+| OCR | Tesseract / PaddleOCR (on-prem) or Azure Document Intelligence (cloud) |
+| Data extraction | Regex/rules + optional Azure OpenAI |
+| Workflow & validation | Existing workflow engine (PoC) |
+| Audit & review queue | SQLite (single site) or PostgreSQL (multi-site) |
+| Logs | JSON Lines (+ optional Sentry, no PHI in logs) |
+| Installer | PyInstaller + Inno Setup (MSI) |
+| Secrets | Windows Credential Manager / Azure Key Vault |
+| CI / regression | GitHub Actions + PoC simulator |
+| OS | Windows 10/11 (Kroll workstation) |
+
+---
+
+## 2. Architecture
+
+```text
+Incoming document (fax/email/PDF)
+        ↓
+   OCR + field extraction
+        ↓
+   Workflow engine (steps, verify, stop on fail)
+        ↓
+   Kroll UI adapter (pywinauto → real Kroll windows)
+        ↓
+   Kroll desktop app (installed by client)
+        ↓
+   Audit DB + human review queue (on failure)
+```
+
+**Components**
+
+- **Automation agent** — tray/hotkey app; runs workflows on the pharmacist PC.
+- **Kroll adapter** — finds controls by automation ID/name (not screen coordinates); read/set fields per tab.
+- **Workflow engine** — Inbox → extract → Patient Search → Patient Record tabs → Save.
+- **Verification** — after each field, read value back; mismatch → stop + screenshot + review queue.
+- **PoC simulator** — regression testing only; not deployed to pharmacies.
+
+**In-scope screens:** document intake, extraction review, Patient Search, Patient Record tabs (General, Insurance, Family, Allergies, Communications — ~20 fields per tab max), save/validation dialogs.
+
+---
+
+## 3. Timeline estimate (2 developers + Cursor AI)
+
+| Phase | Work | Calendar |
+|-------|------|----------|
+| Setup | Kroll test access, UIA discovery, control maps | 1 week |
+| Core | Kroll adapter, tray app, OCR/extraction, Patient Search | 1.5–2 weeks |
+| Tabs | Automate 5 Patient Record tabs + grids/dialogs | 2–3 weeks |
+| Finish | End-to-end workflow, audit UI, installer, pilot fixes | 1.5–2 weeks |
+| **Total to pilot** | | **6–8 weeks** |
+| **Total realistic** | (+ weak Kroll UI or slow client UAT) | **8–12 weeks** |
+
+**Client must provide:** Kroll test environment, sample documents, pharmacist UAT (~1 day per tab).
+
+**Not included:** building Kroll, Rx/inventory/billing modules, unattended 100% automation (human approve on failures).
+
+**One-line quote:** *Automation app on existing Kroll — **6–8 weeks to pilot** with 2 devs and Cursor AI; **8–12 weeks** with UAT and IT deploy buffer.*
